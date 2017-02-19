@@ -75,6 +75,7 @@ public class SigColleApplicationFactory implements ApplicationFactory {
             // authenticated(see middleware configuration)
             r.get("/auth/campaign").to(CampaignController.class, "createForm");
             r.post("/auth/campaign").to(CampaignController.class, "create");
+            r.get("/").to(CampaignController.class, "index");
         }).compile();
 
         app.use(new DefaultCharsetMiddleware());

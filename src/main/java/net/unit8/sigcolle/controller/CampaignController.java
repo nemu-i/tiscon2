@@ -10,9 +10,11 @@ import kotowari.component.TemplateEngine;
 import net.unit8.sigcolle.dao.CampaignDao;
 import net.unit8.sigcolle.dao.SignatureDao;
 import net.unit8.sigcolle.form.CampaignForm;
+import net.unit8.sigcolle.form.LoginForm;
 import net.unit8.sigcolle.form.SignatureForm;
 import net.unit8.sigcolle.model.UserCampaign;
 import net.unit8.sigcolle.model.Signature;
+import net.unit8.sigcolle.model.Campaign;
 
 import static enkan.util.BeanBuilder.builder;
 import static enkan.util.HttpResponseUtils.RedirectStatusCode.SEE_OTHER;
@@ -90,15 +92,54 @@ public class CampaignController {
      * @return HttpResponse
      */
     public HttpResponse createForm() {
-        return templateEngine.render("signature/new");
+        return templateEngine.render("signature/new", "campaign", new CampaignForm());
     }
 
     /**
      * 新規キャンペーン作成処理.
      * @return HttpResponse
      */
-    public HttpResponse create() {
+    public HttpResponse create(CampaignForm form) {
         // TODO: create campaign
+
+        if (form.hasErrors()) {
+            return templateEngine.render("signature/new", "campaign", form);
+        }
+
+        CampaignDao cDao = domaProvider.getDao(CampaignDao.class);
+
+        Campaign cam = builder(new Campaign())
+                //.set(Campaign::setCampaignId, form.getCampaignId())
+                .set(Campaign::setTitle, form.getTitle())
+                .set(Campaign::setStatement, form.getStatement())
+                .set(Campaign::setGoal, form.getGoal())
+                .build();
+        cDao.insert(cam);
+
+/*
+        // メールアドレス重複チェック
+        if (userDao.countByEmail(form.getEmail()) != 0) {
+            form.setErrors(Multimap.of("email", EMAIL_ALREADY_EXISTS));
+            return templateEngine.render("register",
+                    "user", form
+            );
+        }
+
+        User user = builder(new User())
+                .set(User::setLastName, form.getLastName())
+                .set(User::setFirstName, form.getFirstName())
+                .set(User::setEmail, form.getEmail())
+                .set(User::setPass, form.getPass())
+                .build();
+        userDao.insert(user);
+
+        Session session = new Session();
+        User loginUser = userDao.selectByEmail(form.getEmail());
+        session.put(
+                "principal",
+                new LoginUserPrincipal(loginUser.getUserId(), loginUser.getLastName() + " " + loginUser.getFirstName())
+        );
+*/
         return builder(redirect("/", SEE_OTHER)).build();
     }
 }
